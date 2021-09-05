@@ -1,119 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <title>three.js webgl - glTF loader</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-  <link type="text/css" rel="stylesheet" href="main.css">
-</head>
+	<head>
+		<title>three.js webgl - glTF loader</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+	</head>
 
-<body>
-  <div id="info">
-    <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - GLTFLoader<br />
-    Battle Damaged Sci-fi Helmet by
-    <a href="https://sketchfab.com/theblueturtle_" target="_blank" rel="noopener">theblueturtle_</a><br />
-    <a href="https://hdrihaven.com/hdri/?h=royal_esplanade" target="_blank" rel="noopener">Royal Esplanade</a> by <a href="https://hdrihaven.com/" target="_blank" rel="noopener">HDRI Haven</a>
-  </div>
-  <script src="https://threejs.org/build/three.js"></script>
-  <script src="https://raw.githubusercontent.com/mrdoob/three.js/master/examples/jsm/controls/OrbitControls.js"></script>
-  <script src="https://raw.githubusercontent.com/mrdoob/three.js/master/examples/jsm/loaders/GLTFLoader.js"></script>
-  <script src="https://raw.githubusercontent.com/mrdoob/three.js/master/examples/jsm/loaders/RGBELoader.js"></script>
-  <script src="https://raw.githubusercontent.com/mrdoob/three.js/master/examples/jsm/utils/RoughnessMipmapper.js"></script>
+	<body>
+		<div id="info">
+			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> - GLTFLoader<br />
+			Battle Damaged Sci-fi Helmet by
+			<a href="https://sketchfab.com/theblueturtle_" target="_blank" rel="noopener">theblueturtle_</a><br />
+			<a href="https://hdrihaven.com/hdri/?h=royal_esplanade" target="_blank" rel="noopener">Royal Esplanade</a> by <a href="https://hdrihaven.com/" target="_blank" rel="noopener">HDRI Haven</a>
+		</div>
 
-  <script type="module">
-    import { RGBELoader } from 'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/jsm/loaders/RGBELoader.js';
-    
-    let camera, scene, renderer;
+		<script type="module">
 
-    init();
-    render();
+			import * as THREE from '../build/three.module.js';
 
-    function init() {
+			import { OrbitControls } from './jsm/controls/OrbitControls.js';
+			import { GLTFLoader } from './jsm/loaders/GLTFLoader.js';
+			import { RGBELoader } from './jsm/loaders/RGBELoader.js';
+			import { RoughnessMipmapper } from './jsm/utils/RoughnessMipmapper.js';
 
-      const container = document.createElement( 'div' );
-      document.body.appendChild( container );
+			let camera, scene, renderer;
 
-      camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.25, 20 );
-      camera.position.set( - 1.8, 0.6, 2.7 );
+			init();
+			render();
 
-      scene = new THREE.Scene();
+			function init() {
 
-      new RGBELoader()
-        .setPath( 'textures/equirectangular/' )
-        .load( 'royal_esplanade_1k.hdr', function ( texture ) {
+				const container = document.createElement( 'div' );
+				document.body.appendChild( container );
 
-          texture.mapping = THREE.EquirectangularReflectionMapping;
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.25, 20 );
+				camera.position.set( - 1.8, 0.6, 2.7 );
 
-          scene.background = texture;
-          scene.environment = texture;
+				scene = new THREE.Scene();
 
-          render();
+				new RGBELoader()
+					.setPath( 'textures/equirectangular/' )
+					.load( 'royal_esplanade_1k.hdr', function ( texture ) {
 
-          // model
+						texture.mapping = THREE.EquirectangularReflectionMapping;
 
-          // use of RoughnessMipmapper is optional
-          const roughnessMipmapper = new RoughnessMipmapper( renderer );
+						scene.background = texture;
+						scene.environment = texture;
 
-          const loader = new GLTFLoader().setPath( 'models/gltf/DamagedHelmet/glTF/' );
-          loader.load( 'DamagedHelmet.gltf', function ( gltf ) {
+						render();
 
-            gltf.scene.traverse( function ( child ) {
+						// model
 
-              if ( child.isMesh ) {
+						// use of RoughnessMipmapper is optional
+						const roughnessMipmapper = new RoughnessMipmapper( renderer );
 
-                roughnessMipmapper.generateMipmaps( child.material );
+						const loader = new GLTFLoader().setPath( 'models/gltf/DamagedHelmet/glTF/' );
+						loader.load( 'DamagedHelmet.gltf', function ( gltf ) {
 
-              }
+							gltf.scene.traverse( function ( child ) {
 
-            } );
+								if ( child.isMesh ) {
 
-            scene.add( gltf.scene );
+									roughnessMipmapper.generateMipmaps( child.material );
 
-            roughnessMipmapper.dispose();
+								}
 
-            render();
+							} );
 
-          } );
+							scene.add( gltf.scene );
 
-        } );
+							roughnessMipmapper.dispose();
 
-      renderer = new THREE.WebGLRenderer( { antialias: true } );
-      renderer.setPixelRatio( window.devicePixelRatio );
-      renderer.setSize( window.innerWidth, window.innerHeight );
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1;
-      renderer.outputEncoding = THREE.sRGBEncoding;
-      container.appendChild( renderer.domElement );
+							render();
 
-      const controls = new OrbitControls( camera, renderer.domElement );
-      controls.addEventListener( 'change', render ); // use if there is no animation loop
-      controls.minDistance = 2;
-      controls.maxDistance = 10;
-      controls.target.set( 0, 0, - 0.2 );
-      controls.update();
+						} );
 
-      window.addEventListener( 'resize', onWindowResize );
+					} );
 
-    }
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 1;
+				renderer.outputEncoding = THREE.sRGBEncoding;
+				container.appendChild( renderer.domElement );
 
-    function onWindowResize() {
+				const controls = new OrbitControls( camera, renderer.domElement );
+				controls.addEventListener( 'change', render ); // use if there is no animation loop
+				controls.minDistance = 2;
+				controls.maxDistance = 10;
+				controls.target.set( 0, 0, - 0.2 );
+				controls.update();
 
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
+				window.addEventListener( 'resize', onWindowResize );
 
-      renderer.setSize( window.innerWidth, window.innerHeight );
+			}
 
-      render();
+			function onWindowResize() {
 
-    }
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
 
-    function render() {
+				renderer.setSize( window.innerWidth, window.innerHeight );
 
-      renderer.render( scene, camera );
+				render();
 
-    }
+			}
 
-  </script>
+			//
 
-</body>
+			function render() {
+
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+
+	</body>
 </html>
